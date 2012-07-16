@@ -26,6 +26,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.os.Process;
 
 public class Main extends Activity implements SurfaceHolder.Callback,
@@ -45,7 +46,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 	int bitmapWidth = 8;
 	int bitmapHeight = 8;
 
-	float bpm = 14.0f;
+	float bpm = 10.0f;
 
 	int samplingRate = 22050;
 
@@ -55,7 +56,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 	AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
 			samplingRate, AudioFormat.CHANNEL_CONFIGURATION_MONO,
-			AudioFormat.ENCODING_PCM_16BIT, minBufferSize,
+			AudioFormat.ENCODING_PCM_16BIT, minBufferSize * 4,
 			AudioTrack.MODE_STREAM);
 
 	AudioTask audioTask = new AudioTask();
@@ -253,6 +254,16 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			while (false == isCancelled()) {
 				if (false == bitmapQueue.isEmpty()) {
 					bitmap = bitmapQueue.remove();
+					
+					final Bitmap bmp = bitmap;
+					runOnUiThread(new Runnable() {
+						
+						@Override
+						public void run() {
+							((ImageView)findViewById(R.id.image)).setImageBitmap(bmp);
+							
+						}
+					});
 					// Log.d(logTag, "bitmap");
 				}
 
@@ -272,33 +283,6 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 				synth(samples, (float) samplingRate, (float) bpm, bitmapWidth,
 						bitmapHeight, red, green, blue);
 
-				// int windowLength = (int) (bitmapWidth * (samplingRate /
-				// bpm));
-				// int tickLength = (int) (samplingRate / bpm);
-				//
-				// for (int index = 0; index < minBufferSize; ++index) {
-				// int positionInBitmap = (int) (bitmapWidth
-				// * (double) samplePosition / windowLength);
-				// // Log.d(logTag, "pos: " + positionInBitmap);
-				//
-				// samples[index] = 0;
-				//
-				// for (int note = 0; note < bitmapHeight; ++note) {
-				//
-				// double gain = (double) Color.red(bitmap.getPixel(
-				// positionInBitmap, note)) / 1024.0;
-				//
-				// int wavelength = 200 / (note + 1);
-				// if (samplePosition % wavelength == 0) {
-				// samples[index] += (short) (gain * (double) Short.MAX_VALUE);
-				// }
-				// }
-				//
-				// ++samplePosition;
-				// samplePosition %= windowLength;
-				// }
-
-				// Log.d(logTag, "samples");
 				audioTrack.write(samples, 0, samples.length);
 			}
 
