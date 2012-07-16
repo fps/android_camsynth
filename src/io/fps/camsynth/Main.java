@@ -26,12 +26,13 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.os.Process;
 
 public class Main extends Activity implements SurfaceHolder.Callback,
 		Camera.PreviewCallback {
 	static String logTag = Main.class.toString();
 
-	int bitmapWidth = 64;
+	int bitmapWidth = 8;
 	int bitmapHeight = 2;
 
 	double bpm = 14.0;
@@ -216,6 +217,8 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 		@Override
 		protected Void doInBackground(Void... arg0) {
+			Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
+			
 			short[] samples = new short[minBufferSize];
 
 			Bitmap bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight,
