@@ -41,10 +41,11 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 	private native void synth(short[] array, float samplerate, float tempo,
 			int bitmapWidth, int bitmapHeight, float[] intensitiesRed,
-			float[] intensitiesGreen, float[] intensitiesBlue);
+			float[] intensitiesGreen, float[] intensitiesBlue,
+			float[] frequencies);
 
 	private native void prepare();
-	
+
 	int bitmapWidth = 32;
 	int bitmapHeight = 8;
 
@@ -244,27 +245,21 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			Bitmap bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight,
 					Bitmap.Config.ARGB_8888);
 
-			for (int index = 0; index < minBufferSize; ++index) {
-				samples[index] = 0;
-				// samples[index] = (short) (Short.MAX_VALUE * Math.random());
-			}
-
 			Log.d(logTag, "buffersize: " + minBufferSize);
-
-			int samplePosition = 0;
 
 			while (false == isCancelled()) {
 				if (false == bitmapQueue.isEmpty()) {
 					bitmap = bitmapQueue.remove();
-					
+
 					final Bitmap bmp = bitmap;
 					runOnUiThread(new Runnable() {
-						
+
 						@Override
 						public void run() {
 							((ImageView) findViewById(R.id.image))
-									.setBackgroundDrawable(new BitmapDrawable(bmp));
-							
+									.setBackgroundDrawable(new BitmapDrawable(
+											bmp));
+
 						}
 					});
 					// Log.d(logTag, "bitmap");
@@ -284,7 +279,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 				}
 
 				synth(samples, (float) samplingRate, (float) bpm, bitmapWidth,
-						bitmapHeight, red, green, blue);
+						bitmapHeight, red, green, blue, null);
 
 				audioTrack.write(samples, 0, samples.length);
 			}
