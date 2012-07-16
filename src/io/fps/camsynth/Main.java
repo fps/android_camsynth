@@ -51,6 +51,8 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 	float bpm = 10.0f;
 
+	float[] frequencies = new float[bitmapHeight];
+
 	int samplingRate = 22050;
 
 	int minBufferSize = AudioTrack.getMinBufferSize(samplingRate,
@@ -88,6 +90,11 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 		audioTrack.play();
 		audioTask.execute();
 
+		float fundamental = 220.0f;
+		for (int index = 0; index < frequencies.length; ++index) {
+			frequencies[index] = (float) (fundamental * Math.pow(
+					Math.pow(2.0, 1.0 / 12.0), 3.0 * index));
+		}
 		// synth(null);
 	}
 
@@ -279,7 +286,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 				}
 
 				synth(samples, (float) samplingRate, (float) bpm, bitmapWidth,
-						bitmapHeight, red, green, blue, null);
+						bitmapHeight, red, green, blue, frequencies);
 
 				audioTrack.write(samples, 0, samples.length);
 			}

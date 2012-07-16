@@ -28,6 +28,8 @@ void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject this,
 
 	jfloat *red = (*env)->GetFloatArrayElements(env, intensities_red, 0);
 
+	jfloat *freqs = (*env)->GetFloatArrayElements(env, frequencies, 0);
+
 	int window_length = (int) (bitmap_width * (samplerate / tempo));
 	int tick_length = (int) (samplerate / tempo);
 
@@ -52,7 +54,7 @@ void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject this,
 					* (double) red[note * bitmap_width + position_in_bitmap]
 					/ 1024.0;
 
-			int wavelength = 200 / (note + 1);
+			int wavelength = (int)(samplerate / freqs[note]);
 			if (sample_position % wavelength == 0) {
 				sample += ((short) (gain * (double) (2 << 14)));
 			}
@@ -65,8 +67,10 @@ void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject this,
 		++sample_position;
 		sample_position %= window_length;
 	}
+
 	(*env)->ReleaseShortArrayElements(env, array, samples, 0);
 	(*env)->ReleaseFloatArrayElements(env, intensities_red, red, 0);
+	(*env)->ReleaseFloatArrayElements(env, frequencies, freqs, 0);
 }
 
 
