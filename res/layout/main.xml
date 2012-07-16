@@ -1,13 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    >
-<TextView  
-    android:layout_width="fill_parent" 
-    android:layout_height="wrap_content" 
-    android:text="Hello World, Main"
-    />
-</LinearLayout>
+    android:layout_height="fill_parent" >
 
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_centerInParent="true" >
+
+        <!--
+	    Since we need to resize the surface view anyways lateron 
+ 		to keep the aspect ratio, we make it small for a start
+        -->
+
+        <SurfaceView
+            android:id="@+id/surface"
+            android:layout_width="50dp"
+            android:layout_height="50dp" />
+    </FrameLayout>
+
+</RelativeLayout>
