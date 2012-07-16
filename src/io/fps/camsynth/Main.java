@@ -32,10 +32,20 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 		Camera.PreviewCallback {
 	static String logTag = Main.class.toString();
 
-	int bitmapWidth = 8;
-	int bitmapHeight = 2;
+	static {
+		System.loadLibrary("synth");
+	}
 
-	double bpm = 14.0;
+	private native void synth(short[] array, float samplerate, float tempo,
+			int bitmapWidth, int bitmapHeight, float[] intensitiesRed,
+			float[] intensitiesGreen, float[] intensitiesBlue);
+
+	private native void prepare();
+	
+	int bitmapWidth = 8;
+	int bitmapHeight = 8;
+
+	float bpm = 14.0f;
 
 	int samplingRate = 22050;
 
@@ -73,6 +83,8 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 		audioTrack.play();
 		audioTask.execute();
+
+		// synth(null);
 	}
 
 	@Override
@@ -111,6 +123,15 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 		}
 	}
 
+	private void releaseCamera() {
+		if (null != camera) {
+			camera.stopPreview();
+			camera.setPreviewCallback(null);
+			camera.release();
+			camera = null;
+		}
+	}
+
 	@Override
 	public void onPause() {
 		super.onPause();
@@ -120,11 +141,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			audioTask.cancel(true);
 		}
 
-		if (null != camera) {
-			camera.stopPreview();
-			camera.release();
-			camera = null;
-		}
+		releaseCamera();
 	}
 
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,
@@ -141,8 +158,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			/*
 			 * If something went wrong, release the camera...
 			 */
-			camera.release();
-			camera = null;
+			releaseCamera();
 		}
 
 	}
@@ -153,6 +169,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		Log.d(logTag, "surfaceDestroyed");
+		releaseCamera();
 	}
 
 	@Override
@@ -218,7 +235,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 		@Override
 		protected Void doInBackground(Void... arg0) {
 			Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
-			
+
 			short[] samples = new short[minBufferSize];
 
 			Bitmap bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight,
@@ -236,33 +253,50 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			while (false == isCancelled()) {
 				if (false == bitmapQueue.isEmpty()) {
 					bitmap = bitmapQueue.remove();
-					//Log.d(logTag, "bitmap");
+					// Log.d(logTag, "bitmap");
 				}
 
-				int windowLength = (int) (bitmapWidth * (samplingRate / bpm));
-				int tickLength = (int) (samplingRate / bpm);
+				float[] red = new float[bitmapHeight * bitmapWidth];
+				float[] green = new float[bitmapHeight * bitmapWidth];
+				float[] blue = new float[bitmapHeight * bitmapWidth];
 
-				for (int index = 0; index < minBufferSize; ++index) {
-					int positionInBitmap = (int) (bitmapWidth
-							* (double) samplePosition / windowLength);
-					// Log.d(logTag, "pos: " + positionInBitmap);
-
-					samples[index] = 0;
-
-					for (int note = 0; note < bitmapHeight; ++note) {
-
-						double gain = (double)Color.red(bitmap.getPixel(
-								positionInBitmap, note))/1024.0;
-						
-						int wavelength = 200 / (note + 1);
-						if (samplePosition % wavelength  == 0) {
-							samples[index] += (short)(gain * (double)Short.MAX_VALUE);
-						}	
+				for (int height = 0; height < bitmapHeight; ++height) {
+					for (int width = 0; width < bitmapWidth; ++width) {
+						int c = bitmap.getPixel(width, height);
+						red[height * bitmapHeight + width] = Color.red(c);
+						green[height * bitmapHeight + width] = Color.red(c);
+						blue[height * bitmapHeight + width] = Color.red(c);
 					}
-					
-					++samplePosition;
-					samplePosition %= windowLength;
 				}
+
+				synth(samples, (float) samplingRate, (float) bpm, bitmapWidth,
+						bitmapHeight, red, green, blue);
+
+				// int windowLength = (int) (bitmapWidth * (samplingRate /
+				// bpm));
+				// int tickLength = (int) (samplingRate / bpm);
+				//
+				// for (int index = 0; index < minBufferSize; ++index) {
+				// int positionInBitmap = (int) (bitmapWidth
+				// * (double) samplePosition / windowLength);
+				// // Log.d(logTag, "pos: " + positionInBitmap);
+				//
+				// samples[index] = 0;
+				//
+				// for (int note = 0; note < bitmapHeight; ++note) {
+				//
+				// double gain = (double) Color.red(bitmap.getPixel(
+				// positionInBitmap, note)) / 1024.0;
+				//
+				// int wavelength = 200 / (note + 1);
+				// if (samplePosition % wavelength == 0) {
+				// samples[index] += (short) (gain * (double) Short.MAX_VALUE);
+				// }
+				// }
+				//
+				// ++samplePosition;
+				// samplePosition %= windowLength;
+				// }
 
 				// Log.d(logTag, "samples");
 				audioTrack.write(samples, 0, samples.length);
