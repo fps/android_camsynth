@@ -14,6 +14,8 @@ import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -43,7 +45,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 	private native void prepare();
 	
-	int bitmapWidth = 8;
+	int bitmapWidth = 32;
 	int bitmapHeight = 8;
 
 	float bpm = 10.0f;
@@ -260,7 +262,8 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 						
 						@Override
 						public void run() {
-							((ImageView)findViewById(R.id.image)).setImageBitmap(bmp);
+							((ImageView) findViewById(R.id.image))
+									.setBackgroundDrawable(new BitmapDrawable(bmp));
 							
 						}
 					});
@@ -274,9 +277,9 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 				for (int height = 0; height < bitmapHeight; ++height) {
 					for (int width = 0; width < bitmapWidth; ++width) {
 						int c = bitmap.getPixel(width, height);
-						red[height * bitmapHeight + width] = Color.red(c);
-						green[height * bitmapHeight + width] = Color.red(c);
-						blue[height * bitmapHeight + width] = Color.red(c);
+						red[height * bitmapWidth + width] = Color.red(c);
+						green[height * bitmapWidth + width] = Color.green(c);
+						blue[height * bitmapWidth + width] = Color.blue(c);
 					}
 				}
 
