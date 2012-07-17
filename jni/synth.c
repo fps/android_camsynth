@@ -18,7 +18,8 @@ static float lp_coeff = 0.2;
 void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject this,
 		jshortArray array, jfloat samplerate, jfloat tempo, jint bitmap_width,
 		jint bitmap_height, jfloatArray intensities_red,
-		jfloatArray intensities_green, jfloatArray intensities_blue, jfloatArray frequencies) {
+		jfloatArray intensities_green, jfloatArray intensities_blue,
+		jfloatArray frequencies) {
 
 	static int sample_position = 0;
 	static int old_sample = 0;
@@ -54,7 +55,7 @@ void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject this,
 					* (double) red[note * bitmap_width + position_in_bitmap]
 					/ 1024.0;
 
-			int wavelength = (int)(samplerate / freqs[note]);
+			int wavelength = (int) (samplerate / freqs[note]);
 			if (sample_position % wavelength == 0) {
 				sample += ((short) (gain * (double) (2 << 14)));
 			}
@@ -72,5 +73,4 @@ void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject this,
 	(*env)->ReleaseFloatArrayElements(env, intensities_red, red, 0);
 	(*env)->ReleaseFloatArrayElements(env, frequencies, freqs, 0);
 }
-
 

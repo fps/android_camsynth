@@ -95,7 +95,6 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			frequencies[index] = (float) (fundamental * Math.pow(
 					Math.pow(2.0, 1.0 / 12.0), 3.0 * index));
 		}
-		// synth(null);
 	}
 
 	@Override
@@ -261,7 +260,6 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 					final Bitmap bmp = bitmap;
 					runOnUiThread(new Runnable() {
 
-						@Override
 						public void run() {
 							((ImageView) findViewById(R.id.image))
 									.setBackgroundDrawable(new BitmapDrawable(
