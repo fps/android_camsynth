@@ -14,6 +14,8 @@ static float lp_coeff = 0.2;
  * the intensities are arrays with row major order. i.e.
  * the first bitmap_width entries are
  * the intensities of the first image row, etc..
+ *
+ * frequencies is an array of frequencies
  */
 void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject this,
 		jshortArray array, jfloat samplerate, jfloat tempo, jint bitmap_width,

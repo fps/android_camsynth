@@ -24,10 +24,14 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
+import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.os.Process;
 
@@ -95,6 +99,10 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			frequencies[index] = (float) (fundamental * Math.pow(
 					Math.pow(2.0, 1.0 / 12.0), 3.0 * index));
 		}
+
+		GridAdapter adapter = new GridAdapter();
+
+		((GridView) findViewById(R.id.grid)).setAdapter(adapter);
 	}
 
 	@Override
@@ -313,5 +321,44 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 						0, imageBytes.length), bitmapWidth, bitmapHeight, true);
 
 		bitmapQueue.add(bitmap);
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		return true;
+	}
+
+	private class GridAdapter extends BaseAdapter {
+
+		@Override
+		public int getCount() {
+			return bitmapWidth * bitmapHeight;
+		}
+
+		@Override
+		public Object getItem(int arg0) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public long getItemId(int arg0) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public View getView(int arg0, View convertView, ViewGroup viewGroup) {
+			View v = convertView;
+			
+			if (v == null) {
+				v = ((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE))
+						.inflate(R.layout.grid_item, null);
+
+			}
+			
+			return v;
+		}
+
 	}
 }

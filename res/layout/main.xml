@@ -20,7 +20,14 @@
     </FrameLayout>
 
     <ImageView
+        android:visibility="gone"
         android:id="@+id/image"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+
+    <GridView
+        android:numColumns="32"
+        android:id="@+id/grid"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" />
 
