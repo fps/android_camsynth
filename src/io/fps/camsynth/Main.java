@@ -1,6 +1,7 @@
 package io.fps.camsynth;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -30,9 +31,13 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.BaseAdapter;
+import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.os.Process;
 
 public class Main extends Activity implements SurfaceHolder.Callback,
@@ -50,12 +55,12 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 	private native void prepare();
 
-	int bitmapWidth = 32;
+	int bitmapWidth = 8;
 	int bitmapHeight = 8;
 
-	float bpm = 10.0f;
+	float bpm = 6.0f;
 
-	float[] frequencies = new float[bitmapHeight];
+	float[] frequencies;
 
 	int samplingRate = 22050;
 
@@ -91,18 +96,10 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 		((SurfaceView) findViewById(R.id.surface)).getHolder().setType(
 				SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
+		setDimensions(8, 8);
+
 		audioTrack.play();
 		audioTask.execute();
-
-		float fundamental = 220.0f;
-		for (int index = 0; index < frequencies.length; ++index) {
-			frequencies[index] = (float) (fundamental * Math.pow(
-					Math.pow(2.0, 1.0 / 12.0), 3.0 * index));
-		}
-
-		GridAdapter adapter = new GridAdapter();
-
-		((GridView) findViewById(R.id.grid)).setAdapter(adapter);
 	}
 
 	@Override
@@ -134,10 +131,78 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			});
 
 			previewSize = sizes.get(0);
-			parameters.setPreviewSize(previewSize.width, previewSize.height);
+			// parameters.setPreviewSize(previewSize.width, previewSize.height);
 
-			camera.setParameters(parameters);
+			// camera.setParameters(parameters);
 			camera.setPreviewCallback(this);
+		}
+	}
+
+	void setDimensions(int width, int height) {
+		// for (View view : patternViews) {
+		// ((ViewGroup) findViewById(R.id.layout)).removeView(view);
+		// }
+
+		for (int voice = 0; voice < height; ++voice) {
+			LinearLayout layout = new LinearLayout(this);
+			((LinearLayout) findViewById(R.id.pattern_layout)).addView(layout);
+			LinearLayout.LayoutParams params1 = (LinearLayout.LayoutParams) layout
+					.getLayoutParams();
+			params1.width = LayoutParams.FILL_PARENT;
+			params1.height = LayoutParams.FILL_PARENT;
+			params1.weight = 1;
+			layout.setLayoutParams(params1);
+
+			for (int step = 0; step < width; ++step) {
+				View v = ((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE))
+						.inflate(R.layout.grid_item, null);
+				layout.addView(v);
+
+				LinearLayout.LayoutParams params2 = (LinearLayout.LayoutParams) v
+						.getLayoutParams();
+				params2.width = LayoutParams.FILL_PARENT;
+				params2.height = LayoutParams.FILL_PARENT;
+				params2.weight = 1;
+				v.setLayoutParams(params2);
+
+			}
+		}
+
+		findViewById(R.id.layout).requestLayout();
+
+		bitmapWidth = width;
+		bitmapHeight = height;
+
+		float fundamental = 22.5f;
+		frequencies = new float[5 * bitmapHeight];
+
+		int index = 0;
+
+		for (int voice = 0; voice < bitmapHeight; ++voice) {
+			fundamental *= 2;
+			
+			frequencies[index] = (float) (fundamental * Math.pow(
+					Math.pow(2.0, 1.0 / 12.0), 0.0));
+			++index;
+
+			frequencies[index] = (float) (fundamental * Math.pow(
+					Math.pow(2.0, 1.0 / 12.0), 3.0));
+			++index;
+
+			frequencies[index] = (float) (fundamental * Math.pow(
+					Math.pow(2.0, 1.0 / 12.0), 7.0));
+			++index;
+
+
+			frequencies[index] = (float) (fundamental * Math.pow(
+					Math.pow(2.0, 1.0 / 12.0), 10.0));
+
+			++index;
+
+			frequencies[index] = (float) (fundamental * Math.pow(
+					Math.pow(2.0, 1.0 / 14.0), 10.0));
+
+			++index;
 		}
 	}
 
@@ -190,63 +255,63 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 		releaseCamera();
 	}
 
-	@Override
-	public void onWindowFocusChanged(boolean hasFocus) {
-		super.onWindowFocusChanged(hasFocus);
-
-		/*
-		 * If we didn't gain focus (i.e. became visible), we do nothing
-		 */
-		if (false == hasFocus) {
-			return;
-		}
-
-		/*
-		 * first is width, second is height.
-		 */
-		Pair<Integer, Integer> layoutSize = null;
-
-		View layout = findViewById(R.id.layout);
-		layoutSize = new Pair<Integer, Integer>(layout.getWidth(),
-				layout.getHeight());
-
-		Log.d(logTag, "onWindowFocusChanged. layout size: " + layoutSize.first
-				+ " " + layoutSize.second);
-
-		/*
-		 * Resize the surface view such that it fills the layout but keeps the
-		 * aspect ratio
-		 */
-		SurfaceView surfaceView = (SurfaceView) findViewById(R.id.surface);
-		ViewGroup.LayoutParams layoutParams = surfaceView.getLayoutParams();
-
-		/*
-		 * Calculate the two scaling factors to scale the surface up to the
-		 * whole width/height of the encompassing layout
-		 */
-		double widthFactor = (double) layoutSize.first
-				/ (double) previewSize.width;
-
-		double heightFactor = (double) layoutSize.second
-				/ (double) previewSize.height;
-
-		/*
-		 * Take the bigger of the two since we want the preview to fill the
-		 * screen (this results in some parts of the preview not being visible.
-		 * The alternative would be a preview that doesn't fill the whole screen
-		 */
-		double scaleFactor = Math.max(widthFactor, heightFactor);
-
-		layoutParams.width = (int) Math.ceil(scaleFactor * previewSize.width);
-		layoutParams.height = (int) Math.ceil(scaleFactor * previewSize.height);
-
-		Log.d(logTag, "new size: " + layoutParams.width + " "
-				+ layoutParams.height);
-
-		surfaceView.setLayoutParams(layoutParams);
-
-		findViewById(R.id.layout).requestLayout();
-	}
+	// @Override
+	// public void onWindowFocusChanged(boolean hasFocus) {
+	// super.onWindowFocusChanged(hasFocus);
+	//
+	// /*
+	// * If we didn't gain focus (i.e. became visible), we do nothing
+	// */
+	// if (false == hasFocus) {
+	// return;
+	// }
+	//
+	// /*
+	// * first is width, second is height.
+	// */
+	// Pair<Integer, Integer> layoutSize = null;
+	//
+	// View layout = findViewById(R.id.layout);
+	// layoutSize = new Pair<Integer, Integer>(layout.getWidth(),
+	// layout.getHeight());
+	//
+	// Log.d(logTag, "onWindowFocusChanged. layout size: " + layoutSize.first
+	// + " " + layoutSize.second);
+	//
+	// /*
+	// * Resize the surface view such that it fills the layout but keeps the
+	// * aspect ratio
+	// */
+	// SurfaceView surfaceView = (SurfaceView) findViewById(R.id.surface);
+	// ViewGroup.LayoutParams layoutParams = surfaceView.getLayoutParams();
+	//
+	// /*
+	// * Calculate the two scaling factors to scale the surface up to the
+	// * whole width/height of the encompassing layout
+	// */
+	// double widthFactor = (double) layoutSize.first
+	// / (double) previewSize.width;
+	//
+	// double heightFactor = (double) layoutSize.second
+	// / (double) previewSize.height;
+	//
+	// /*
+	// * Take the bigger of the two since we want the preview to fill the
+	// * screen (this results in some parts of the preview not being visible.
+	// * The alternative would be a preview that doesn't fill the whole screen
+	// */
+	// double scaleFactor = Math.max(widthFactor, heightFactor);
+	//
+	// layoutParams.width = (int) Math.ceil(scaleFactor * previewSize.width);
+	// layoutParams.height = (int) Math.ceil(scaleFactor * previewSize.height);
+	//
+	// Log.d(logTag, "new size: " + layoutParams.width + " "
+	// + layoutParams.height);
+	//
+	// //surfaceView.setLayoutParams(layoutParams);
+	//
+	// //findViewById(R.id.layout).requestLayout();
+	// }
 
 	private class AudioTask extends AsyncTask<Void, Void, Void> {
 
@@ -307,13 +372,15 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			return;
 		}
 
-		YuvImage yuvimage = new YuvImage(data, ImageFormat.NV21,
-				previewSize.width, previewSize.height, null);
+		YuvImage yuvimage = new YuvImage(data, ImageFormat.NV21, camera
+				.getParameters().getPreviewSize().width, camera.getParameters()
+				.getPreviewSize().height, null);
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-		yuvimage.compressToJpeg(new Rect(0, 0, previewSize.width,
-				previewSize.height), 80, baos);
+		yuvimage.compressToJpeg(new Rect(0, 0, camera.getParameters()
+				.getPreviewSize().width, camera.getParameters()
+				.getPreviewSize().height), 80, baos);
 
 		byte[] imageBytes = baos.toByteArray();
 		Bitmap bitmap = Bitmap
@@ -328,37 +395,4 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 		return true;
 	}
 
-	private class GridAdapter extends BaseAdapter {
-
-		@Override
-		public int getCount() {
-			return bitmapWidth * bitmapHeight;
-		}
-
-		@Override
-		public Object getItem(int arg0) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public long getItemId(int arg0) {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-
-		@Override
-		public View getView(int arg0, View convertView, ViewGroup viewGroup) {
-			View v = convertView;
-			
-			if (v == null) {
-				v = ((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE))
-						.inflate(R.layout.grid_item, null);
-
-			}
-			
-			return v;
-		}
-
-	}
 }

@@ -1,13 +1,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="30dp"
-    android:layout_height="30dp"
-    android:background="@android:color/white"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:background="#40FFFFFF"
     android:padding="5dp" >
 
     <View
         android:id="@+id/layout"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="#000000" />
+        android:background="#60000000" />
 
 </LinearLayout>
