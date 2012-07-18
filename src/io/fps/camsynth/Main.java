@@ -71,7 +71,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 	AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
 			samplingRate, AudioFormat.CHANNEL_CONFIGURATION_MONO,
-			AudioFormat.ENCODING_PCM_16BIT, minBufferSize * 4,
+			AudioFormat.ENCODING_PCM_16BIT, minBufferSize * 8,
 			AudioTrack.MODE_STREAM);
 
 	AudioTask audioTask = new AudioTask();
@@ -386,11 +386,16 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 						.getChildAt(step);
 				int pixel = bitmap.getPixel(step, voice);
 
-				noteLayout.setBackgroundColor(Color.argb(80, Color.red(pixel),
-						0, 0));
+				// noteLayout.setBackgroundColor(Color.argb(80,
+				// Color.red(pixel),
+				// 0, 0));
 
 				noteLayout.getChildAt(0).setBackgroundColor(
-						Color.argb(80, 0, Color.green(pixel), 0));
+						Color.argb(100, Color.red(pixel), 0, 0));
+				noteLayout.getChildAt(1).setBackgroundColor(
+						Color.argb(100, 0, Color.green(pixel), 0));
+				noteLayout.getChildAt(2).setBackgroundColor(
+						Color.argb(100, 0, 0, Color.blue(pixel)));
 			}
 		}
 
