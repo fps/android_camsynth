@@ -17,7 +17,7 @@ static float lp_coeff = 0.05;
  *
  * frequencies is an array of frequencies
  */
-void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject this,
+void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject that,
 		jshortArray array, jfloat samplerate, jfloat tempo, jint bitmap_width,
 		jint bitmap_height, jfloatArray intensities_red,
 		jfloatArray intensities_green, jfloatArray intensities_blue,
@@ -27,13 +27,13 @@ void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject this,
 	static int sample_position_in_window = 0;
 	static int old_sample = 0;
 
-	jsize samples_length = (*env)->GetArrayLength(env, array);
-	jshort *samples = (*env)->GetShortArrayElements(env, array, 0);
+	jsize samples_length = env->GetArrayLength(array);
+	jshort *samples = (env)->GetShortArrayElements(array, 0);
 
-	jfloat *red = (*env)->GetFloatArrayElements(env, intensities_red, 0);
+	jfloat *red = (env)->GetFloatArrayElements(intensities_red, 0);
 
-	jfloat *freqs = (*env)->GetFloatArrayElements(env, frequencies, 0);
-	jsize freqs_length = (*env)->GetArrayLength(env, frequencies);
+	jfloat *freqs = (env)->GetFloatArrayElements(frequencies, 0);
+	jsize freqs_length = (env)->GetArrayLength(frequencies);
 
 	int window_length = (int) (bitmap_width * (samplerate / tempo));
 	int tick_length = (int) (samplerate / tempo);
@@ -79,8 +79,8 @@ void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject this,
 		sample_position_in_window %= window_length;
 	}
 
-	(*env)->ReleaseShortArrayElements(env, array, samples, 0);
-	(*env)->ReleaseFloatArrayElements(env, intensities_red, red, 0);
-	(*env)->ReleaseFloatArrayElements(env, frequencies, freqs, 0);
+	(env)->ReleaseShortArrayElements(array, samples, 0);
+	(env)->ReleaseFloatArrayElements(intensities_red, red, 0);
+	(env)->ReleaseFloatArrayElements(frequencies, freqs, 0);
 }
 

@@ -1,7 +1,6 @@
 package io.fps.camsynth;
 
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -16,7 +15,6 @@ import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -24,20 +22,14 @@ import android.media.AudioTrack;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.BaseAdapter;
-import android.widget.FrameLayout;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.os.Process;
 
 public class Main extends Activity implements SurfaceHolder.Callback,
@@ -242,6 +234,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			 * If something went wrong, release the camera...
 			 */
 			releaseCamera();
+			camera = null;
 		}
 
 	}
