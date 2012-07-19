@@ -43,7 +43,8 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 	private native void synth(short[] array, float samplerate, float tempo,
 			int bitmapWidth, int bitmapHeight, float[] intensitiesRed,
 			float[] intensitiesGreen, float[] intensitiesBlue,
-			float[] frequencies);
+			float[] frequencies, float env_coeff, float lp_coeff,
+			short max_value);
 
 	private native void prepare();
 
@@ -54,7 +55,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 	float[] frequencies;
 
-	int samplingRate = 22050;
+	int samplingRate = 44100;
 
 	int minBufferSize = AudioTrack.getMinBufferSize(samplingRate,
 			AudioFormat.CHANNEL_CONFIGURATION_MONO,
@@ -62,7 +63,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 	AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
 			samplingRate, AudioFormat.CHANNEL_CONFIGURATION_MONO,
-			AudioFormat.ENCODING_PCM_16BIT, minBufferSize * 4,
+			AudioFormat.ENCODING_PCM_16BIT, minBufferSize * 8,
 			AudioTrack.MODE_STREAM);
 
 	AudioTask audioTask = new AudioTask();
@@ -123,9 +124,9 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			});
 
 			previewSize = sizes.get(0);
-			// parameters.setPreviewSize(previewSize.width, previewSize.height);
+			parameters.setPreviewSize(previewSize.width, previewSize.height);
 
-			// camera.setParameters(parameters);
+			camera.setParameters(parameters);
 			camera.setPreviewCallback(this);
 		}
 	}
@@ -172,7 +173,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 		for (int voice = 0; voice < bitmapHeight; ++voice) {
 			fundamental *= 2;
-			
+
 			frequencies[index] = (float) (fundamental * Math.pow(
 					Math.pow(2.0, 1.0 / 12.0), 0.0));
 			++index;
@@ -184,7 +185,6 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			frequencies[index] = (float) (fundamental * Math.pow(
 					Math.pow(2.0, 1.0 / 12.0), 7.0));
 			++index;
-
 
 			frequencies[index] = (float) (fundamental * Math.pow(
 					Math.pow(2.0, 1.0 / 12.0), 10.0));
@@ -322,18 +322,6 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 			while (false == isCancelled()) {
 				if (false == bitmapQueue.isEmpty()) {
 					bitmap = bitmapQueue.remove();
-
-					final Bitmap bmp = bitmap;
-					runOnUiThread(new Runnable() {
-
-						public void run() {
-							((ImageView) findViewById(R.id.image))
-									.setBackgroundDrawable(new BitmapDrawable(
-											bmp));
-
-						}
-					});
-					// Log.d(logTag, "bitmap");
 				}
 
 				float[] red = new float[bitmapHeight * bitmapWidth];
@@ -350,7 +338,8 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 				}
 
 				synth(samples, (float) samplingRate, (float) bpm, bitmapWidth,
-						bitmapHeight, red, green, blue, frequencies);
+						bitmapHeight, red, green, blue, frequencies, 0.999f,
+						0.5f, Short.MAX_VALUE);
 
 				audioTrack.write(samples, 0, samples.length);
 			}
@@ -379,6 +368,29 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 		Bitmap bitmap = Bitmap
 				.createScaledBitmap(BitmapFactory.decodeByteArray(imageBytes,
 						0, imageBytes.length), bitmapWidth, bitmapHeight, true);
+
+		LinearLayout stepLayout = (LinearLayout) findViewById(R.id.pattern_layout);
+
+		for (int voice = 0; voice < bitmapHeight; ++voice) {
+			LinearLayout voiceLayout = (LinearLayout) stepLayout
+					.getChildAt(voice);
+			for (int step = 0; step < bitmapWidth; ++step) {
+				LinearLayout noteLayout = (LinearLayout) voiceLayout
+						.getChildAt(step);
+				int pixel = bitmap.getPixel(step, voice);
+
+				// noteLayout.setBackgroundColor(Color.argb(80,
+				// Color.red(pixel),
+				// 0, 0));
+
+				noteLayout.getChildAt(0).setBackgroundColor(
+						Color.argb(100, Color.red(pixel), 0, 0));
+				noteLayout.getChildAt(1).setBackgroundColor(
+						Color.argb(100, 0, Color.green(pixel), 0));
+				noteLayout.getChildAt(2).setBackgroundColor(
+						Color.argb(100, 0, 0, Color.blue(pixel)));
+			}
+		}
 
 		bitmapQueue.add(bitmap);
 	}

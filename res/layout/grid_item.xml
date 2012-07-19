@@ -1,14 +1,30 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/frame"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical"
     android:background="#40FFFFFF"
+    android:orientation="horizontal"
     android:padding="5dp" >
 
     <View
-        android:id="@+id/layout"
+        android:id="@+id/box_red"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
+        android:layout_weight="1"
+        android:background="#60000000" />
+
+    <View
+        android:id="@+id/box_green"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1"
+        android:background="#60000000" />
+
+    <View
+        android:id="@+id/box_blue"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1"
         android:background="#60000000" />
 
 </LinearLayout>
