@@ -4,6 +4,8 @@
 #define MAX_VOICES 128
 
 static float voices[MAX_VOICES];
+
+extern "C" {
 /*
  * Fills a buffer with synthesis data..
  *
@@ -81,3 +83,4 @@ void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject that,
 	(env)->ReleaseFloatArrayElements(frequencies, freqs, 0);
 }
 
+} // extern  "C"
