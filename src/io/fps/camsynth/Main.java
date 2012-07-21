@@ -47,7 +47,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 	private native void prepare();
 
 	int bitmapWidth = 8;
-	int bitmapHeight = 1;
+	int bitmapHeight = 8;
 
 	float bpm = 6.0f;
 
