@@ -1,59 +1,9 @@
 #include <jni.h>  
 #include <stdlib.h>
 
-#include <vector>
-#include <iostream>
-
-#include <Stk.h>
-#include <SineWave.h>
-#include <ADSR.h>
-#include <BlitSquare.h>
-
 #define MAX_VOICES 128
 
-struct voice {
-	stk::ADSR adsr_;
-	stk::BlitSquare wave_;
-
-	voice() {
-		wave_.reset();
-		//wave_.setRate(1);
-		wave_.setFrequency(1);
-	}
-
-	float tick() {
-		return adsr_.tick() * wave_.tick();
-		//return adsr_.tick();
-	}
-};
-
-struct synth {
-	std::vector<voice> voices_;
-
-	synth(int num_voices = MAX_VOICES) :
-			voices_(num_voices) {
-
-		for (unsigned int index = 0; index < num_voices; ++index) {
-			voices_[index] = voice();
-		}
-
-		stk::Stk::setSampleRate(44100);
-	}
-
-	float tick(int voices) {
-		// std::cout << "tick" << std::endl;
-		float ret = 0;
-		for (unsigned int index = 0; index < voices; ++index) {
-			ret += voices_[index].tick();
-		}
-
-		return ret;
-	}
-};
-
-synth s;
-
-extern "C" {
+static float voices[MAX_VOICES];
 /*
  * Fills a buffer with synthesis data..
  *
@@ -72,6 +22,7 @@ void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject that,
 
 	static int sample_position = 0;
 	static int sample_position_in_window = 0;
+	static int old_sample = 0;
 
 	jsize samples_length = env->GetArrayLength(array);
 	jshort *samples = (env)->GetShortArrayElements(array, 0);
@@ -85,8 +36,15 @@ void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject that,
 	int tick_length = (int) (samplerate / tempo);
 
 	int index;
+	float envelope = 0;
 	for (index = 0; index < samples_length; ++index) {
 		short sample = 0;
+
+		if (sample_position % tick_length == 0) {
+			envelope = 1.0;
+		}
+
+		envelope *= env_coeff;
 
 		int position_in_bitmap = (int) (bitmap_width
 				* (double) sample_position_in_window / window_length);
@@ -95,15 +53,23 @@ void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject that,
 		for (note = 0; note < bitmap_height; ++note) {
 
 			if (sample_position % tick_length == 0) {
-				s.voices_[note].wave_.setFrequency(
-						freqs[note * 2
-								+ (int) (5.0 * (float) rand() / (float) RAND_MAX)]);
+				voices[note] = freqs[note * 2
+						+ (int) (5.0 * (float) rand() / (float) RAND_MAX)];
+			}
 
-				s.voices_[note].adsr_.keyOn();
+			double gain = envelope
+					* (double) red[note * bitmap_width + position_in_bitmap]
+					/ 1024.0;
+
+			int wavelength = (int) (samplerate / voices[note]);
+			if (sample_position % wavelength == 0) {
+				sample += ((short) (gain * (double) (2 << 15)));
 			}
 		}
+		sample = (lp_coeff * sample + (1.0 - lp_coeff) * old_sample);
 
-		samples[index] = (short) ((float) (2 << 14) * s.tick(bitmap_height));
+		samples[index] = sample;
+		old_sample = sample;
 
 		++sample_position;
 		++sample_position_in_window;
@@ -114,5 +80,3 @@ void Java_io_fps_camsynth_Main_synth(JNIEnv * env, jobject that,
 	(env)->ReleaseFloatArrayElements(intensities_red, red, 0);
 	(env)->ReleaseFloatArrayElements(frequencies, freqs, 0);
 }
-
-} // extern  "C"
