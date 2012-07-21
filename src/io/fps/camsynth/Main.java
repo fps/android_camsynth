@@ -47,7 +47,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 	private native void prepare();
 
 	int bitmapWidth = 8;
-	int bitmapHeight = 8;
+	int bitmapHeight = 1;
 
 	float bpm = 6.0f;
 
@@ -87,7 +87,7 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 		((SurfaceView) findViewById(R.id.surface)).getHolder().setType(
 				SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
-		setDimensions(8, 8);
+		setDimensions(bitmapWidth, bitmapHeight);
 
 		audioTrack.play();
 		audioTask.execute();
