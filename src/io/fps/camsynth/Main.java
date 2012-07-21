@@ -1,6 +1,7 @@
 package io.fps.camsynth;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -246,64 +247,6 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 		releaseCamera();
 	}
 
-	// @Override
-	// public void onWindowFocusChanged(boolean hasFocus) {
-	// super.onWindowFocusChanged(hasFocus);
-	//
-	// /*
-	// * If we didn't gain focus (i.e. became visible), we do nothing
-	// */
-	// if (false == hasFocus) {
-	// return;
-	// }
-	//
-	// /*
-	// * first is width, second is height.
-	// */
-	// Pair<Integer, Integer> layoutSize = null;
-	//
-	// View layout = findViewById(R.id.layout);
-	// layoutSize = new Pair<Integer, Integer>(layout.getWidth(),
-	// layout.getHeight());
-	//
-	// Log.d(logTag, "onWindowFocusChanged. layout size: " + layoutSize.first
-	// + " " + layoutSize.second);
-	//
-	// /*
-	// * Resize the surface view such that it fills the layout but keeps the
-	// * aspect ratio
-	// */
-	// SurfaceView surfaceView = (SurfaceView) findViewById(R.id.surface);
-	// ViewGroup.LayoutParams layoutParams = surfaceView.getLayoutParams();
-	//
-	// /*
-	// * Calculate the two scaling factors to scale the surface up to the
-	// * whole width/height of the encompassing layout
-	// */
-	// double widthFactor = (double) layoutSize.first
-	// / (double) previewSize.width;
-	//
-	// double heightFactor = (double) layoutSize.second
-	// / (double) previewSize.height;
-	//
-	// /*
-	// * Take the bigger of the two since we want the preview to fill the
-	// * screen (this results in some parts of the preview not being visible.
-	// * The alternative would be a preview that doesn't fill the whole screen
-	// */
-	// double scaleFactor = Math.max(widthFactor, heightFactor);
-	//
-	// layoutParams.width = (int) Math.ceil(scaleFactor * previewSize.width);
-	// layoutParams.height = (int) Math.ceil(scaleFactor * previewSize.height);
-	//
-	// Log.d(logTag, "new size: " + layoutParams.width + " "
-	// + layoutParams.height);
-	//
-	// //surfaceView.setLayoutParams(layoutParams);
-	//
-	// //findViewById(R.id.layout).requestLayout();
-	// }
-
 	private class AudioTask extends AsyncTask<Void, Void, Void> {
 
 		@Override
@@ -347,6 +290,20 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 
 	}
 
+	int bitmapMedian(Bitmap bitmap) {
+		List<Integer> pixels = new ArrayList<Integer>();
+
+		for (int row = 0; row < bitmap.getHeight(); ++row) {
+			for (int col = 0; col < bitmap.getHeight(); ++col) {
+				pixels.add(Color.red(bitmap.getPixel(row, col)));
+			}
+		}
+
+		Collections.sort(pixels);
+
+		return pixels.get(pixels.size() / 2);
+	}
+
 	public void onPreviewFrame(byte[] data, Camera camera) {
 		if (false == bitmapQueue.isEmpty()) {
 			return;
@@ -367,6 +324,8 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 				.createScaledBitmap(BitmapFactory.decodeByteArray(imageBytes,
 						0, imageBytes.length), bitmapWidth, bitmapHeight, true);
 
+		int median = bitmapMedian(bitmap);
+
 		LinearLayout stepLayout = (LinearLayout) findViewById(R.id.pattern_layout);
 
 		for (int voice = 0; voice < bitmapHeight; ++voice) {
@@ -381,12 +340,20 @@ public class Main extends Activity implements SurfaceHolder.Callback,
 				// Color.red(pixel),
 				// 0, 0));
 
-				noteLayout.getChildAt(0).setBackgroundColor(
-						Color.argb(100, Color.red(pixel), 0, 0));
-				noteLayout.getChildAt(1).setBackgroundColor(
-						Color.argb(100, 0, Color.green(pixel), 0));
-				noteLayout.getChildAt(2).setBackgroundColor(
-						Color.argb(100, 0, 0, Color.blue(pixel)));
+				if (Color.red(pixel) > median) {
+					noteLayout.getChildAt(0).setBackgroundColor(
+							Color.argb(100, Color.red(pixel), 0, 0));
+					noteLayout.getChildAt(1).setBackgroundColor(
+							Color.argb(100, 0, Color.green(pixel), 0));
+					noteLayout.getChildAt(2).setBackgroundColor(
+							Color.argb(100, 0, 0, Color.blue(pixel)));
+				} else {
+					noteLayout.getChildAt(0).setBackgroundColor(Color.BLACK);
+					noteLayout.getChildAt(1).setBackgroundColor(Color.BLACK);
+					noteLayout.getChildAt(2).setBackgroundColor(Color.BLACK);
+
+					bitmap.setPixel(step, voice, Color.BLACK);
+				}
 			}
 		}
 
